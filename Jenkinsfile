@@ -21,7 +21,11 @@ pipeline {
         }
         stage('test'){
             steps {
+                sh '''
                 echo "Test Stage"
+                ls -la
+                npm test
+                '''
             }
         }
     }
