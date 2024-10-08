@@ -38,6 +38,7 @@ pipeline {
     post {
         always {
             junit 'test-results/jnit.xml'
+            npm test
         }
     }
 }
