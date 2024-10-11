@@ -57,9 +57,6 @@ pipeline {
                     }
                     steps {
                         sh '''
-                        npm install serve
-                        node_modules/.bin/serve -s build &
-                        sleep 10
                         npx playwright test --reporter=html
                         '''
                     }
@@ -71,7 +68,7 @@ pipeline {
                                 keepAll: false, 
                                 reportDir: 'playwright-report', 
                                 reportFiles: 'index.html', 
-                                reportName: 'Playwright HTML Report', 
+                                reportName: 'Local Report', 
                                 reportTitles: '', 
                                 useWrapperFileDirectly: true
                             ])
@@ -98,5 +95,41 @@ pipeline {
                 '''
             }
         }
+
+        stage('Prod E2E') {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                        }
+                    }
+
+                    environment{
+                    CI_ENVIRONMENT_URL = 'https://stunning-hamster-0060a9.netlify.app'
+                    }
+
+                    steps {
+                        sh '''
+                        npm install serve
+                        node_modules/.bin/serve -s build &
+                        sleep 10
+                        npx playwright test --reporter=html
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([
+                                allowMissing: false, 
+                                alwaysLinkToLastBuild: false, 
+                                keepAll: false, 
+                                reportDir: 'playwright-report', 
+                                reportFiles: 'index.html', 
+                                reportName: 'Playwright E2E Report', 
+                                reportTitles: '', 
+                                useWrapperFileDirectly: true
+                            ])
+                        }
+                    }
+                }
     }
 }
