@@ -57,6 +57,9 @@ pipeline {
                     }
                     steps {
                         sh '''
+                        npm install serve
+                        node_modules/.bin/serve -s build &
+                        sleep 10
                         npx playwright test --reporter=html
                         '''
                     }
@@ -78,7 +81,25 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy Stage') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                npm install netlify-cli
+                node_modules/.bin/netlify --version
+                echo "Deploying to Staging. Site Id: $NETLIFY_SITE_ID"
+                node_modules/.bin/netlify status
+                node_modules/.bin/netlify deploy --dir=build
+                '''
+            }
+        }
+
+        stage('Deploy Prod') {
             agent {
                 docker {
                     image 'node:18-alpine'
@@ -110,9 +131,6 @@ pipeline {
 
                     steps {
                         sh '''
-                        npm install serve
-                        node_modules/.bin/serve -s build &
-                        sleep 10
                         npx playwright test --reporter=html
                         '''
                     }
